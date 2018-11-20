@@ -1,9 +1,10 @@
-import building
+from Server.building import Building
 import pickle
 
 
-class buildingDB:
+class BuildingDB:
     def __init__(self):
+        # TODO: verification and error handling
         try:
             f = open('buildings_dump', 'rb')
             self.bib = pickle.load(f)
@@ -11,36 +12,40 @@ class buildingDB:
         except IOError:
             self.bib = {}
 
-    def addBook(self, id, name, latitude, longitude):
-        b_id = len(self.bib)
-        self.bib[b_id] = book.book(author, title, year, b_id)
-        f = open('bd_dump' + self.name, 'wb')
+    def add_building(self, b_id, name, latitude, longitude):
+        idd = len(self.bib)
+        self.bib[idd] = Building(b_id, name, latitude, longitude)
+        f = open('buildings_dump', 'wb')
         pickle.dump(self.bib, f)
         f.close()
 
-    def showBook(self, b_id):
-        return self.bib[b_id]
-
-    def listAllBooks(self):
+    def list_buildings(self):
         return list(self.bib.values())
 
-    def listAllAuthors(self):
+    def list_id(self, b_id):
         ret_value = []
         for b in self.bib.values():
-            if b.author not in ret_value:
-                ret_value.append(b.author)
-        return ret_value
-
-    def listBooksAuthor(self, authorName):
-        ret_value = []
-        for b in self.bib.values():
-            if b.author == authorName:
+            if b.id == b_id:
                 ret_value.append(b)
         return ret_value
 
-    def listBooksYear(self, year):
+    def list_name(self, name):
         ret_value = []
         for b in self.bib.values():
-            if b.year == year:
+            if b.namelatitude == name:
+                ret_value.append(b)
+        return ret_value
+
+    def list_latitude(self, latitude):
+        ret_value = []
+        for b in self.bib.values():
+            if b.latitude == latitude:
+                ret_value.append(b)
+        return ret_value
+
+    def list_longitude(self, longitude):
+        ret_value = []
+        for b in self.bib.values():
+            if b.longitude == longitude:
                 ret_value.append(b)
         return ret_value

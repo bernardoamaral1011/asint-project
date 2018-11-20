@@ -1,4 +1,4 @@
-class building:
+class Building:
     def __init__(self, b_id, name, latitude, longitude):
         self.id = b_id
         self.name = name
