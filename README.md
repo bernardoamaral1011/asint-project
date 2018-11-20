@@ -37,3 +37,14 @@ Bots API:
 - registration and assignment to a building
 - send message to users in that building
 
+
+Class Notes:
+
+admin - python -> aplicação 
+user - html -> página web
+bots - python
+server apis - flask
+
+primeiro: definir api de interação com o servidor
+
+admin pode ter autenticação ou pode configurar os bots como quiser -> 20
