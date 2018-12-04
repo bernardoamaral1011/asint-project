@@ -1,6 +1,12 @@
 # asint-project
 ASint Subject Project
 
+1º- fazer as bd's para os três tipos de dados, em python
+2º- fazer as 3 API's em flask
+3º- só depois fazer as aplicações que interagem com as API's
+4º- Migrar as API's e a base de dados para o Google Cloud Platform
+
+
 Admin:
     python only app that lets the admin interact with the api functions
 
@@ -15,7 +21,7 @@ Admin API: (/API/Buildings/...)
 with a simple query to select the user or building.
 
 User: 
-    html, AJAX application that does the following:
+    html, javascript application that does the following:
 
 - calls user api functions/domains
 
