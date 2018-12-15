@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+        PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="https://www.w3schools.com/w3css/3/w3.css"/>
+    <link rel="stylesheet" type="text/css" href="main.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="jquery-ui.css"> </link>
+    <script src="jquery.js"></script>
+    <script src="jquery-ui.js"></script>
+    <title>Asint Project</title>
+</head> 
+
+<body class="bodyy" style="padding: 0;">
+    <!-- Sidebar -->
+    <div id="mySidenav" class="sidenav">
+        <img class="logo2" src="../static/istlogo.png" style="width:70%" alt="image not found"/>
+        <a href="/">Home Page</a>
+    </div>
+
+    <!-- Titlebar -->
+    <nav class="w3-bar w3-blue w3-center">
+        <div class="w3-padding-12">ASint Project</div>
+    </nav>
+
+    <!-- Subtitlebar #TODO -->
+    <section class="w3-padding-64 w3-container w3-center">
+        <h2 class="w3-center">Welcome *name*, number *istid*</h2>
+    </section>
+
+    <!-- Current location #TODO -->
+    <p class="w3-center">Your curent location:</p>
+    <script type="text/javascript">
+//<![CDATA[
+        var x = document.createElement('div');
+        getLocation();
+        x.classList="w3-center";
+        document.body.appendChild(x);
+        function getLocation() {
+            if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(showPosition);
+            } else { 
+            x.innerHTML = "Geolocation is not supported by this browser.";
+            }
+        }
+        function showPosition(position) {
+            x.innerHTML="Latitude: " + position.coords.latitude + 
+            "<br/>Longitude: " + position.coords.longitude;
+        }
+//]]>
+    </script>
+    
+    <!-- Message Box #TODO -->
+
+
+    <!-- Users Nearby #TODO -->
+
+
+    <!-- Users in Same Building #TODO -->
+
+
+    <!-- Send message to selected user #TODO -->
+
+
+    <!-- Messages received #TODO -->
+
+    <!--<script>
+        var x = document.getElementById("currentPos");
+        
+        function getLocation() {
+            if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(showPosition);
+            } else { 
+            x.innerHTML = "Geolocation is not supported by this browser.";
+            }
+        }
+            
+        function showPosition(position) {
+            x.innerHTML="Latitude: " + position.coords.latitude + 
+            "<br/>Longitude: " + position.coords.longitude;
+        }
+    </script>-->
+    <br/><br/><br/><br/><br/><br/><br/>
+    <br/><br/><br/><br/><br/><br/><br/>
+    <br/><br/><br/><br/><br/><br/><br/>    
+    <footer class="w3-container w3-black">
+        <a href="https://tecnico.ulisboa.pt"><img class="istlogo w3-left" src="../static/istlogo.png" alt="image not found"/></a>
+        <div class="w3-small w3-right" style="padding:25px;">
+            Made with <span class="heart">❤</span>
+        </div>
+    </footer>
+</body>
+
+</html>

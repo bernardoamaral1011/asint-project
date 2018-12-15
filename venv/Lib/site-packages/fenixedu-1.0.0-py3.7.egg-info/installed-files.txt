@@ -1,0 +1,15 @@
+..\fenixedu\__init__.py
+..\fenixedu\__pycache__\__init__.cpython-37.pyc
+..\fenixedu\__pycache__\configuration.cpython-37.pyc
+..\fenixedu\__pycache__\endpoints.cpython-37.pyc
+..\fenixedu\__pycache__\request_methods.cpython-37.pyc
+..\fenixedu\__pycache__\user.cpython-37.pyc
+..\fenixedu\configuration.py
+..\fenixedu\endpoints.py
+..\fenixedu\request_methods.py
+..\fenixedu\user.py
+PKG-INFO
+SOURCES.txt
+dependency_links.txt
+requires.txt
+top_level.txt

@@ -1,0 +1,55 @@
+/* The side navigation menu */
+.sidenav {
+    height: 100%; /* 100% Full-height */
+    width: 200px;
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Stay on top */
+    top: 0; /* Stay at the top */
+    left: 0;
+    background-color: #111; /* Black*/
+    overflow-x: hidden; /* Disable horizontal scroll */
+    /*overflow-y: hidden;*/
+    padding-top: 60px; /* Place content 60px from the top */
+    transition: 0s; /* 0.5 second transition effect to slide in the sidenav */
+}
+.bodyy{
+    margin-left: 200px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+/* The navigation menu links */
+.sidenav a {
+    padding: 0px 0px 0px 25px;
+    text-decoration: none;
+    font-size: 14.6px;
+    padding-bottom: 16px;
+    color: #818181;
+    display: flex;
+    transition: 0s;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidenav a:hover {
+    color: lightblue;
+}
+
+.logo {
+    display: block;
+    width:30%;
+    padding:5px;
+    margin: auto;
+    margin-left:350px;
+   
+}
+
+.logo2 {
+    padding-left: 35px;
+    padding-bottom: 40px;
+}
+
+
+.istlogo {
+    display:block;
+    width: 12.5%;
+    padding: 10px;
+    margin:auto;
+}

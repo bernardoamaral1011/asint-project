@@ -1,0 +1,10 @@
+fenixedu/__init__.py
+fenixedu/configuration.py
+fenixedu/endpoints.py
+fenixedu/request_methods.py
+fenixedu/user.py
+fenixedu.egg-info/PKG-INFO
+fenixedu.egg-info/SOURCES.txt
+fenixedu.egg-info/dependency_links.txt
+fenixedu.egg-info/requires.txt
+fenixedu.egg-info/top_level.txt
