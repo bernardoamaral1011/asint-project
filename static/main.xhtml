@@ -23,7 +23,8 @@
 
     <!-- Titlebar -->
     <nav class="w3-bar w3-blue w3-center">
-        <div class="w3-padding-12">ASint Project</div>
+        <button class="w3-button w3-padding-12 w3-right w3-hover-white w3-black" onclick="logout()">Logout</button>
+        <div class="w3-padding-12">ASint Project</div>  
     </nav>
 
     <!-- Welcome with name and id of the user -->
@@ -157,7 +158,7 @@
     </script>
 
 
-    <!-- Users in Same Building #TODO -->
+    <!-- Users in Same Building -->
     <hr/>
     <div class="w3-center">
         <h4 class="w3-center">Users inside your building:</h4>
@@ -194,26 +195,75 @@
         </script>
     </div>
 
-    <!-- Send message to selected user #TODO:rabitmq -->
+    <!-- Send message to selected user -->
     <hr/>
     <div class="w3-center">
         <h4>Send a message to a nearby user:</h4>
-        <form action="" id="usrform">
-            Id: <input type="text" name="usrname"/>
-            <p>Message:</p> <textarea rows="4" cols="50" name="comment" form="usrform"></textarea> 
-            <br/>
-            <input type="submit" value="Send mensage"/>
-        </form>
+        Id: <input type="text" id="destIdS" name="usrname"/>
+        <p>Message:</p> <textarea rows="4" cols="50" id="messageS" form="usrform"></textarea> 
+        <br/>
+        <input type="submit" id="sendMBtn" value="Send mensage"/>
+        <p id="messageSent"></p>
+        <script>
+            //<![CDATA[
+            $('#sendMBtn').click(function( event ) {
+                $("#messageSent").html("waiting");
+                $.ajax({
+                    type: 'POST',
+                    url: '/API/users/sendMessage',
+                    dataType: "json",
+                    contentType: "application/json",
+                    data: '{"dest":"' + $("#destIdS").val() + '","message":"'+ $("#messageS").val()+'"}',
+                    success: function(data) {
+                        console.log(data);
+                        s='No nearby users!';
+                        s= '<p>'+data.data+'</p>'
+                        $("#messageSent").html(s);
+                    }
+                });
+            });
+            //]]>
+        </script>
     </div>
     
-    <!-- Messages received #TODO:mqrabbit -->
+    <!-- Messages received -->
     <hr/>
     <div class="w3-center">
         <h4>Check received messages:</h4>
-        
+        <input type="submit" value="Check messages"  id="checkMBtn"/>
+        <div class="w3-center" id="receivedMContainer"></div>
+        <script>
+            //<![CDATA[
+            $('#checkMBtn').click(function( event ) {
+                $("#receivedMContainer").html("waiting");
+                $.ajax({
+                    type: 'GET',
+                    url: '/API/users/checkMessages',
+                    dataType: "json",
+                    contentType: "application/json",
+                    success: function(data) {
+                        console.log(data);
+                        s='No received messages';
+                        for (var i = 0, len = data.length; i < len; i++) {
+                            if(i==0){
+                                s = "<table class='w3-center' style='width:100%'>";
+                                s += "<tr><th>Messages received</th></tr>";
+                            }
+                            s += "<tr><td>";
+                            s += data[i];
+                            s += "</td></tr>";
+                            if(i== (len-1))
+                                s += "</table>";
+                        }
+                        $("#receivedMContainer").html(s);   
+                    }
+                });
+            });
+            //]]>
+        </script>
     </div>
 
-    <!-- LOG OUT TODO: logout in fenix and redirect -->
+    <!-- LOG OUT -->
     <script>
     //<![CDATA[
         function logout() {
@@ -224,18 +274,14 @@
                 async: false,
                 contentType: "application/json",
                 success: function(data) {
-                    //TODO: ?
                 }
             });
             window.location.replace("https://id.tecnico.ulisboa.pt/cas/logout");
         }
     //]]>
     </script>
-    
-    <br/><br/><br/><br/><br/><br/><br/>
-    <br/><br/><br/><br/><br/><br/><br/>
-    <button style="margin:auto;display:block;" class="w3-button" onclick="logout()">Logout</button>
-    <br/><br/><br/><br/><br/><br/><br/>    
+
+    <br/><br/><br/>   
     <footer class="w3-container w3-black">
         <a href="https://tecnico.ulisboa.pt"><img class="istlogo w3-left" src="../static/istlogo.png" alt="image not found"/></a>
         <div class="w3-small w3-right" style="padding:25px;">

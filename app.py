@@ -4,20 +4,26 @@ from pymongo import MongoClient
 from aux_fcs import calc_distance
 import requests
 import fenixedu
+import pika
+import datetime
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'fa44b4d05ca689421eab1673a7409596792666138641e92e3097deb0bdac56c6'
 client = MongoClient('mongodb+srv://asint-project:sj5TinwUUc79Sgq@asint-project-adah1.gcp.mongodb.net/test?retryWrites=true')
 db = client['database1']
+# TODO: connect to rabbitmq through pika?
+
+buildDefaultRadius = 0.02
 
 @app.route("/")
 def homepage():
     url = 'https://fenix.tecnico.ulisboa.pt/oauth/userdialog?client_id=1977390058176582&redirect_uri=http://localhost:5000/API/users/login'
     return redirect(url)
 
+
 @app.route("/API/users/login", methods=['GET'])
 def login():
-    #TODO: fix refresh error!
     if 'code' in request.args:
         code = request.args['code']
         url = 'https://fenix.tecnico.ulisboa.pt/oauth/access_token?'
@@ -40,7 +46,6 @@ def login():
         session['userId'] = username
         session['userSecret'] = access_token
         session['curBuildId'] = None
-        # TODO: COMO REMOVER DA DB QUANDO FAZ LOGOUT? (SEM CARREGAR NUM BOTAO)
         resp = make_response(redirect("static/main.xhtml"))
         resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         resp.headers['Pragma'] = 'no-cache'
@@ -49,6 +54,7 @@ def login():
         resp.set_cookie('userSecret', access_token)
         return resp
     return '<h1>Error 404: Internal Server Error</h1>'
+
 
 @app.route("/API/users/getId")
 def getID():
@@ -72,7 +78,9 @@ def updateLocation():
                 longitude = request.json["longitude"]
                 # Insert in database
                 users = db['users']
-                # TODO: not forget to uncomment this later on
+                ###########################################
+                # Do not forget to uncomment this later on#
+                ###########################################
                 #users.update_one({'id': session['userId']}, {'$set':{'latitude': latitude, 'longitude': longitude}})
                 users.update_one({'id': session['userId']}, {'$set':{'latitude': '38.737535', 'longitude': '-9.138630'}})
                 
@@ -81,26 +89,28 @@ def updateLocation():
                 buildings = db['buildings']
                 cur_build = None
                 for building in buildings.find():
-                    if calc_distance(cur_user["latitude"], cur_user["longitude"], building["latitude"], building["longitude"], 0.02):
+                    if calc_distance(cur_user["latitude"], cur_user["longitude"], building["latitude"], building["longitude"], buildDefaultRadius):
                         cur_build = building # What if he is in 2 buildings? -> let's presume that simply doesnt happen
                 # This is also where we send check in and check out logs to db
                 # Checkout only case, when user gets out of the building
                 logs = db['logs']
                 if (cur_build is None) and (session['curBuildId'] is not None):
                     session['curBuildId'] = None
-                    logs.insert_one({'user': session['userId'], 'building': session['curBuildId'], 'message': 'check-out'})
+                    logs.insert_one({'user': session['userId'], 'building': session['curBuildId'], 'message': 'check-out', 'time': datetime.datetime.now()})
                 # Checkin only case, when user gets inside a building
                 elif (cur_build is not None) and (session['curBuildId'] is None):
                     session['curBuildId'] = cur_build['id']
-                    logs.insert_one({'user': session['userId'], 'building': cur_build['id'], 'message': 'check-in'})
+                    logs.insert_one({'user': session['userId'], 'building': cur_build['id'], 'message': 'check-in', 'time': datetime.datetime.now()})
                 # Check in/out, when user switches buildings
                 elif (cur_build is not None) and (session['curBuildId'] is not None):
                     if (cur_build['id'] != session['curBuildId']):
                         session['curBuildId'] = cur_build['id']
-                        logs.insert_one({'user': session['userId'], 'building': session['curBuildId'], 'message': 'check-out'})
-                        logs.insert_one({'user': session['userId'], 'building': cur_build['id'], 'message': 'check-in'})
-            # TODO: not forget to uncomment this later on
-            # #return jsonify({'latitude': latitude, 'longitude': longitude})
+                        logs.insert_one({'user': session['userId'], 'building': session['curBuildId'], 'message': 'check-out', 'time': datetime.datetime.now()})
+                        logs.insert_one({'user': session['userId'], 'building': cur_build['id'], 'message': 'check-in', 'time': datetime.datetime.now()})
+            ###########################################
+            # Do not forget to uncomment this later on#
+            ###########################################
+            #return jsonify({'latitude': latitude, 'longitude': longitude})
             return jsonify({'latitude': '38.737535', 'longitude': '-9.138630'})
     return '<h1>Error 404: Internal Server Error</h1>'
 
@@ -113,7 +123,7 @@ def getBuilding():
             cur_user = users.find_one({"id": session['userId']})
             buildings = db['buildings']
             for building in buildings.find():
-                if calc_distance(cur_user["latitude"], cur_user["longitude"], building["latitude"], building["longitude"], 0.02):
+                if calc_distance(cur_user["latitude"], cur_user["longitude"], building["latitude"], building["longitude"], buildDefaultRadius):
                     return jsonify({'name': building['name']})
     return jsonify({'name': 'Oops youre not inside a building'})
     
@@ -147,14 +157,14 @@ def seeBuilding():
             # Iterate through all buildings to get the current one
             cur_build = None
             for building in buildings.find():
-                if calc_distance(cur_user["latitude"], cur_user["longitude"], building["latitude"], building["longitude"], 0.02):
+                if calc_distance(cur_user["latitude"], cur_user["longitude"], building["latitude"], building["longitude"], buildDefaultRadius):
                     cur_build = building
             # Iterate through all the users to see if someone is in cur_building
             response = []
             if cur_build is not None:
                 for user in users.find():
                     if(cur_user['id'] != user['id'] ):
-                        if calc_distance(cur_build["latitude"], cur_build["longitude"], user["latitude"], user["longitude"], 0.02):
+                        if calc_distance(cur_build["latitude"], cur_build["longitude"], user["latitude"], user["longitude"], buildDefaultRadius):
                             response.append(user['id'])
             return jsonify(response)
             
@@ -163,23 +173,56 @@ def seeBuilding():
 
 @app.route("/API/users/sendMessage", methods=['GET', 'POST'])
 def sendMessage():
-    return redirect("static/main.xhtml")
+    if(request.is_json):
+        users = db['users']
+        if (users.find_one({"id": request.json['dest']})):
+            message = request.json['message']
+            if message == '':
+                return jsonify({'data': 'Blank messages not supported'})
+            receiver = users.find_one({"id": request.json['dest']})
+            sender = users.find_one({"id": session['userId']})
+            # Check if receiver is in same building
+            if (session['curBuildId'] is not None):
+                buildings = db['buildings']
+                building = buildings.find_one({"id": session['curBuildId']})
+                if calc_distance(building['latitude'], building['longitude'], receiver['latitude'], receiver['longitude'], buildDefaultRadius):
+                    # TODO: Send through pika - rabbitmq and then test for bugs
+
+                    # Insert message in logs
+                    logs = db['logs']
+                    logs.insert_one({'sender': session['userId'], 'receiver': receiver['id'], 'message': message, 'time': datetime.datetime.now()})
+                    return jsonify({'data': 'Message sent'})
+            # Check if receiver is nearby
+            if calc_distance(sender['latitude'], sender['longitude'], receiver['latitude'], receiver['longitude'], buildDefaultRadius) :
+                # TODO: Send through pika - rabbitmq 
+
+                # Insert message in logs
+                logs = db['logs']
+                logs.insert_one({'sender': session['userId'], 'receiver': receiver['id'], 'message': message, 'time': datetime.datetime.now()})
+                return jsonify({'data': 'Message sent'})
+            return jsonify({'data': 'User not in range'})
+        else:
+            return jsonify({'data': 'User not in database'})
+    return jsonify({'data': 'Wrong message format'})
 
 
 @app.route("/API/users/checkMessages", methods=['GET', 'POST'])
 def checkMessages():
-    return redirect("static/main.xhtml")
+    response = []
+    # TODO: Receive all messages for this user in a loop through pika - rabbitmq 
+
+    response.append("destid: message")
+    return jsonify(response)
 
 
 @app.route("/API/users/logout", methods=['GET', 'POST'])
 def logout():
     if (request.cookies.get('userId') == session['userId']):
         if (request.cookies.get('userSecret') == session['userSecret']):
-            #TODO: how to logout from fenix???
             # Send Checkout to database
             if session['curBuildId'] is not None:
                 logs = db['logs']
-                logs.insert_one({'user': session['userId'], 'building': session['curBuildId'], 'message': 'check-out'})
+                logs.insert_one({'user': session['userId'], 'building': session['curBuildId'], 'message': 'check-out', 'time': datetime.datetime.now()})
             # Delete user from db collection of online users
             users = db['users']
             users.delete_one({'id': session['userId']})
