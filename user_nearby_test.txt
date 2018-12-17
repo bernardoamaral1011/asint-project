@@ -1,5 +1,5 @@
-[{'id': 'ist1', 'name': '1', latitude:'39', longitude:'-10'},
-{'id': 'ist2', 'name': '2', latitude:'38', longitude:'-9'},
-{'id': 'ist3', 'name': '3', latitude:'40', longitude:'-1'},
-{'id': 'ist4', 'name': '4', latitude:'50', longitude:'-19'},
-{'id': 'ist5', 'name': '5', latitude:'29', longitude:'0'}]
+[{'id': 'ist1', 'name': '1', 'latitude':'39', 'longitude':'-10'},
+{'id': 'ist2', 'name': '2', 'latitude':'38', 'longitude':'-9'},
+{'id': 'ist3', 'name': '3', 'latitude':'40', 'longitude':'-1'},
+{'id': 'ist4', 'name': '4', 'latitude':'50', 'longitude':'-19'},
+{'id': 'ist5', 'name': '5', 'latitude':'29', 'longitude':'0'}]

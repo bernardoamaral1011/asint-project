@@ -35,11 +35,11 @@ def login():
         users = db['users']
         if not users.find_one({"id": username}):
             users.insert_one(user)
-        
+
         # Set the id and secret into session variables
         session['userId'] = username
         session['userSecret'] = access_token
-
+        session['curBuildId'] = None
         # TODO: COMO REMOVER DA DB QUANDO FAZ LOGOUT? (SEM CARREGAR NUM BOTAO)
         resp = make_response(redirect("static/main.xhtml"))
         resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
@@ -48,8 +48,6 @@ def login():
         resp.set_cookie('userId', username)
         resp.set_cookie('userSecret', access_token)
         return resp
-        #return redirect("static/main.xhtml")
-
     return '<h1>Error 404: Internal Server Error</h1>'
 
 @app.route("/API/users/getId")
@@ -74,9 +72,51 @@ def updateLocation():
                 longitude = request.json["longitude"]
                 # Insert in database
                 users = db['users']
-                users.update_one({'id': session['userId']}, {'$set':{'latitude': latitude, 'longitude': longitude}})
-            return jsonify({'latitude': latitude, 'longitude': longitude})
+                # TODO: not forget to uncomment this later on
+                #users.update_one({'id': session['userId']}, {'$set':{'latitude': latitude, 'longitude': longitude}})
+                users.update_one({'id': session['userId']}, {'$set':{'latitude': '38.737535', 'longitude': '-9.138630'}})
+                
+                cur_user = users.find_one({"id": session['userId']})
+                # Iterate through all buildings to get the current one
+                buildings = db['buildings']
+                cur_build = None
+                for building in buildings.find():
+                    if calc_distance(cur_user["latitude"], cur_user["longitude"], building["latitude"], building["longitude"], 0.02):
+                        cur_build = building # What if he is in 2 buildings? -> let's presume that simply doesnt happen
+                # This is also where we send check in and check out logs to db
+                # Checkout only case, when user gets out of the building
+                logs = db['logs']
+                if (cur_build is None) and (session['curBuildId'] is not None):
+                    session['curBuildId'] = None
+                    logs.insert_one({'user': session['userId'], 'building': session['curBuildId'], 'message': 'check-out'})
+                # Checkin only case, when user gets inside a building
+                elif (cur_build is not None) and (session['curBuildId'] is None):
+                    session['curBuildId'] = cur_build['id']
+                    logs.insert_one({'user': session['userId'], 'building': cur_build['id'], 'message': 'check-in'})
+                # Check in/out, when user switches buildings
+                elif (cur_build is not None) and (session['curBuildId'] is not None):
+                    if (cur_build['id'] != session['curBuildId']):
+                        session['curBuildId'] = cur_build['id']
+                        logs.insert_one({'user': session['userId'], 'building': session['curBuildId'], 'message': 'check-out'})
+                        logs.insert_one({'user': session['userId'], 'building': cur_build['id'], 'message': 'check-in'})
+            # TODO: not forget to uncomment this later on
+            # #return jsonify({'latitude': latitude, 'longitude': longitude})
+            return jsonify({'latitude': '38.737535', 'longitude': '-9.138630'})
     return '<h1>Error 404: Internal Server Error</h1>'
+
+
+@app.route("/API/users/getBuilding", methods=['GET'])
+def getBuilding():
+    if (request.cookies.get('userId') == session['userId']):
+        if (request.cookies.get('userSecret') == session['userSecret']):
+            users = db['users']
+            cur_user = users.find_one({"id": session['userId']})
+            buildings = db['buildings']
+            for building in buildings.find():
+                if calc_distance(cur_user["latitude"], cur_user["longitude"], building["latitude"], building["longitude"], 0.02):
+                    return jsonify({'name': building['name']})
+    return jsonify({'name': 'Oops youre not inside a building'})
+    
 
 @app.route("/API/users/seeNearby", methods=['GET', 'POST'])
 def seeNearby():
@@ -95,10 +135,31 @@ def seeNearby():
                 return jsonify(response)
     return '<h1>Error 404: Internal Server Error</h1>'
 
+
 @app.route("/API/users/seeBuilding", methods=['GET', 'POST'])
 def seeBuilding():
+    if (request.cookies.get('userId') == session['userId']):
+        if (request.cookies.get('userSecret') == session['userSecret']):
+            # First get this user building
+            users = db['users']
+            cur_user = users.find_one({"id": session['userId']})
+            buildings = db['buildings']
+            # Iterate through all buildings to get the current one
+            cur_build = None
+            for building in buildings.find():
+                if calc_distance(cur_user["latitude"], cur_user["longitude"], building["latitude"], building["longitude"], 0.02):
+                    cur_build = building
+            # Iterate through all the users to see if someone is in cur_building
+            response = []
+            if cur_build is not None:
+                for user in users.find():
+                    if(cur_user['id'] != user['id'] ):
+                        if calc_distance(cur_build["latitude"], cur_build["longitude"], user["latitude"], user["longitude"], 0.02):
+                            response.append(user['id'])
+            return jsonify(response)
+            
+    return '<h1>Error 404: Internal Server Error</h1>'
 
-    return redirect("static/main.xhtml")
 
 @app.route("/API/users/sendMessage", methods=['GET', 'POST'])
 def sendMessage():
@@ -115,11 +176,17 @@ def logout():
     if (request.cookies.get('userId') == session['userId']):
         if (request.cookies.get('userSecret') == session['userSecret']):
             #TODO: how to logout from fenix???
+            # Send Checkout to database
+            if session['curBuildId'] is not None:
+                logs = db['logs']
+                logs.insert_one({'user': session['userId'], 'building': session['curBuildId'], 'message': 'check-out'})
+            # Delete user from db collection of online users
             users = db['users']
             users.delete_one({'id': session['userId']})
+            # Clear session variables
             session.clear()
-            return "You have been logged out - close page and log in again"
-    return ' Error - logout'
+            return ''
+    return 'Error on logout'
 
 if __name__ == '__main__':
     app.run(debug = 'TRUE')

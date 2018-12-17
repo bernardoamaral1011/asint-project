@@ -1,0 +1,8 @@
+[{'id': '2448131361091', 'name': 'Torre Norte', 'latitude':'38.737575', 'longitude':'-9.138647'},
+{'id': '2448131361074', 'name': 'Torre Sul', 'latitude':'38.736008', 'longitude':'-9.138522'}]
+
+admin: define os edifícios e as suas localizações
+-o admin vai buscar os edificios 
+
+1- tem de ter todos os edifícios à escolha na aplicação (selecionar?)
+2- os selecionados são inseridos

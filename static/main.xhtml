@@ -91,7 +91,32 @@
     //]]>
     </script>
 
-
+    <!-- Current Building -->
+    <hr/>
+    <div class="w3-center">
+        <input type="submit" value="Show current building"  id="curBuilding"/>
+        <h2 class="w3-center" id="cur_build"></h2>
+    </div>
+    <script>
+    //<![CDATA[
+    $('#curBuilding').click(function( event ) {
+        $.ajax({
+            type: 'GET',
+            url: '/API/users/getBuilding',
+            dataType: "json",
+            async: false,
+            contentType: "application/json",
+            success: function(data) {
+                console.log(data);
+                sessionStorage.setItem("cur_build", data.name);
+                s = "You are in building: " + data.name
+                $("#cur_build").html(s);
+            }
+        });
+    });
+    //]]>
+    </script>
+    
     <!-- Users Nearby -->
     <hr/>
     <div class="w3-center">
@@ -130,11 +155,43 @@
         });
         //]]>
     </script>
+
+
     <!-- Users in Same Building #TODO -->
     <hr/>
     <div class="w3-center">
-        <h4>Check current building and users inside it:</h4>
-
+        <h4 class="w3-center">Users inside your building:</h4>
+        <input type="submit" value="Search for users"  id="buildButton"/>
+        <div class="w3-center" id="buildUsers"></div>
+        <script>
+            //<![CDATA[
+            $('#buildButton').click(function( event ) {
+                $("#buildUsers").html("waiting");
+                $.ajax({
+                    type: 'GET',
+                    url: '/API/users/seeBuilding',
+                    dataType: "json",
+                    contentType: "application/json",
+                    success: function(data) {
+                        console.log(data);
+                        s='No users in same building!';
+                        for (var i = 0, len = data.length; i < len; i++) {
+                            if(i==0){
+                                s = "<table class='w3-center' style='width:100%'>";
+                                s += "<tr><th>Users in same building by ID</th></tr>";
+                            }
+                            s += "<tr><td>";
+                            s += data[i];
+                            s += "</td></tr>";
+                            if(i== (len-1))
+                                s += "</table>";
+                        }
+                        $("#buildUsers").html(s);   
+                    }
+                });
+            });
+            //]]>
+        </script>
     </div>
 
     <!-- Send message to selected user #TODO:rabitmq -->
@@ -159,32 +216,6 @@
     <!-- LOG OUT TODO: logout in fenix and redirect -->
     <script>
     //<![CDATA[
-        /*var inactivityTime = function () {
-            var t;
-            window.onload = resetTimer;
-            // DOM Events
-            document.onmousemove = resetTimer;
-            document.onkeypress = resetTimer;
-
-            function logout() {
-                $.ajax({
-                    type: 'GET',
-                    url: '/API/users/logout',
-                    dataType: "json",
-                    async: false,
-                    contentType: "application/json",
-                    success: function(data) {
-                        //TODO: redirect to login again??? pobably
-                    }
-                });
-            }
-
-            function resetTimer() {
-                clearTimeout(t);
-                t = setTimeout(logout, 150000)
-                // 2,5 minutos
-            }
-        };
         function logout() {
             $.ajax({
                 type: 'GET',
@@ -193,10 +224,11 @@
                 async: false,
                 contentType: "application/json",
                 success: function(data) {
-                    //TODO: redirect to login again??? pobably
+                    //TODO: ?
                 }
             });
-        }*/
+            window.location.replace("https://id.tecnico.ulisboa.pt/cas/logout");
+        }
     //]]>
     </script>
     
