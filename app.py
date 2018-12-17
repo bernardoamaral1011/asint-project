@@ -7,8 +7,8 @@ import fenixedu
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'fa44b4d05ca689421eab1673a7409596792666138641e92e3097deb0bdac56c6'
-client = MongoClient('mongodb://localhost:27017/')
-db = client['asint-project']
+client = MongoClient('mongodb+srv://asint-project:sj5TinwUUc79Sgq@asint-project-adah1.gcp.mongodb.net/test?retryWrites=true')
+db = client['database1']
 
 @app.route("/")
 def homepage():
@@ -35,6 +35,7 @@ def login():
         users = db['users']
         if not users.find_one({"id": username}):
             users.insert_one(user)
+        
         # Set the id and secret into session variables
         session['userId'] = username
         session['userSecret'] = access_token
