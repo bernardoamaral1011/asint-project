@@ -26,65 +26,183 @@
         <div class="w3-padding-12">ASint Project</div>
     </nav>
 
-    <!-- Subtitlebar #TODO -->
+    <!-- Welcome with name and id of the user -->
     <section class="w3-padding-64 w3-container w3-center">
-        <h2 class="w3-center">Welcome *name*, number *istid*</h2>
+        <h2 class="w3-center" id="Welcome">
+            <script>
+            //<![CDATA[
+            $(document).ready(function() {
+                $.ajax({
+                    type: 'GET',
+                    url: '/API/users/getId',
+                    dataType: "json",
+                    async: false,
+                    contentType: "application/json",
+                    success: function(data) {
+                        console.log(data);
+                        sessionStorage.setItem("userId", data.username);
+                        s = "Welcome " + data.name + ", " + data.username 
+                        $("#Welcome").html(s);
+                    }
+                });
+            });
+            //]]>
+            </script>
+        </h2>
     </section>
 
-    <!-- Current location #TODO -->
-    <p class="w3-center">Your curent location:</p>
+    <!-- Current location -->
+    <h4 class="w3-center">Your current location:</h4>
     <script type="text/javascript">
-//<![CDATA[
+    //<![CDATA[
         var x = document.createElement('div');
         getLocation();
+        setInterval(getLocation,60000);
         x.classList="w3-center";
         document.body.appendChild(x);
-        function getLocation() {
-            if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(showPosition);
-            } else { 
-            x.innerHTML = "Geolocation is not supported by this browser.";
-            }
-        }
-        function showPosition(position) {
-            x.innerHTML="Latitude: " + position.coords.latitude + 
-            "<br/>Longitude: " + position.coords.longitude;
-        }
-//]]>
-    </script>
-    
-    <!-- Message Box #TODO -->
-
-
-    <!-- Users Nearby #TODO -->
-
-
-    <!-- Users in Same Building #TODO -->
-
-
-    <!-- Send message to selected user #TODO -->
-
-
-    <!-- Messages received #TODO -->
-
-    <!--<script>
-        var x = document.getElementById("currentPos");
         
         function getLocation() {
             if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(showPosition);
+            navigator.geolocation.getCurrentPosition(showPosition);
             } else { 
             x.innerHTML = "Geolocation is not supported by this browser.";
             }
         }
-            
         function showPosition(position) {
-            x.innerHTML="Latitude: " + position.coords.latitude + 
-            "<br/>Longitude: " + position.coords.longitude;
+            sessionStorage.setItem("latitude", position.coords.latitude);
+            sessionStorage.setItem("longitude", position.coords.longitude);
+            //x.innerHTML="Latitude: " + position.coords.latitude + 
+            //"<br/>Longitude: " + position.coords.longitude;
+            updateLocation();
         }
-    </script>-->
+        function updateLocation(){
+            $.ajax({
+                type: "POST",
+                url: "/API/users/updateLocation",
+                datatype: "json",
+                contentType: "application/json",
+                data: '{"latitude":"' + sessionStorage.getItem("latitude") + '", "longitude":"'+sessionStorage.getItem("longitude")+'"}',
+                success: function (data) {
+                    console.log(data);
+                    x.innerHTML="Latitude: " + data.latitude + "<br/> Longitude: " + data.longitude; 
+                }
+            })
+        }
+    //]]>
+    </script>
+
+
+    <!-- Users Nearby -->
+    <hr/>
+    <div class="w3-center">
+        <h4>Input a radius for nearby user's search (km's)</h4>
+        <input type="text" name="" size="20" id="searchText" />
+        <input type="submit" value="Search for nearby users"  id="nearbyButton"/>
+    </div>
+    <div class="w3-center" id="nearbyUsers"></div>
+    <script>
+        //<![CDATA[
+        $('#nearbyButton').click(function( event ) {
+            $("#nearbyUsers").html("waiting");
+            $.ajax({
+                type: 'POST',
+                url: '/API/users/seeNearby',
+                dataType: "json",
+                contentType: "application/json",
+                data: '{"radius":"' + $("#searchText").val() + '"}',
+                success: function(data) {
+                    console.log(data);
+                    s='No nearby users!';
+                    for (var i = 0, len = data.length; i < len; i++) {
+                        if(i==0){
+                            s = "<table class='w3-center' style='width:100%'>";
+                            s += "<tr><th>Nearby Users by ID</th></tr>";
+                        }
+                        s += "<tr><td>";
+                        s += data[i];
+                        s += "</td></tr>";
+                        if(i== (len-1))
+                            s += "</table>";
+                    }
+                    $("#nearbyUsers").html(s);   
+                }
+            });
+        });
+        //]]>
+    </script>
+    <!-- Users in Same Building #TODO -->
+    <hr/>
+    <div class="w3-center">
+        <h4>Check current building and users inside it:</h4>
+
+    </div>
+
+    <!-- Send message to selected user #TODO:rabitmq -->
+    <hr/>
+    <div class="w3-center">
+        <h4>Send a message to a nearby user:</h4>
+        <form action="" id="usrform">
+            Id: <input type="text" name="usrname"/>
+            <p>Message:</p> <textarea rows="4" cols="50" name="comment" form="usrform"></textarea> 
+            <br/>
+            <input type="submit" value="Send mensage"/>
+        </form>
+    </div>
+    
+    <!-- Messages received #TODO:mqrabbit -->
+    <hr/>
+    <div class="w3-center">
+        <h4>Check received messages:</h4>
+        
+    </div>
+
+    <!-- LOG OUT TODO: logout in fenix and redirect -->
+    <script>
+    //<![CDATA[
+        /*var inactivityTime = function () {
+            var t;
+            window.onload = resetTimer;
+            // DOM Events
+            document.onmousemove = resetTimer;
+            document.onkeypress = resetTimer;
+
+            function logout() {
+                $.ajax({
+                    type: 'GET',
+                    url: '/API/users/logout',
+                    dataType: "json",
+                    async: false,
+                    contentType: "application/json",
+                    success: function(data) {
+                        //TODO: redirect to login again??? pobably
+                    }
+                });
+            }
+
+            function resetTimer() {
+                clearTimeout(t);
+                t = setTimeout(logout, 150000)
+                // 2,5 minutos
+            }
+        };
+        function logout() {
+            $.ajax({
+                type: 'GET',
+                url: '/API/users/logout',
+                dataType: "json",
+                async: false,
+                contentType: "application/json",
+                success: function(data) {
+                    //TODO: redirect to login again??? pobably
+                }
+            });
+        }*/
+    //]]>
+    </script>
+    
     <br/><br/><br/><br/><br/><br/><br/>
     <br/><br/><br/><br/><br/><br/><br/>
+    <button style="margin:auto;display:block;" class="w3-button" onclick="logout()">Logout</button>
     <br/><br/><br/><br/><br/><br/><br/>    
     <footer class="w3-container w3-black">
         <a href="https://tecnico.ulisboa.pt"><img class="istlogo w3-left" src="../static/istlogo.png" alt="image not found"/></a>
