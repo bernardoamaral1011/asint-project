@@ -13,7 +13,7 @@ app.config['SECRET_KEY'] = 'fa44b4d05ca689421eab1673a7409596792666138641e92e3097
 client = MongoClient('mongodb+srv://asint-project:sj5TinwUUc79Sgq@asint-project-adah1.gcp.mongodb.net/test?retryWrites=true')
 db = client['database1']
 # TODO: deploy to rabbitmq virtual machine
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+connection = pika.BlockingConnection(pika.URLParameters('amqp://ipfhgnix:bdVKXFFYnkNsnWggTdGxBnKT8sd_eMHb@porpoise.rmq.cloudamqp.com/ipfhgnix')) # '35.190.171.18'
 channel = connection.channel()
 
 buildDefaultRadius = 0.02
