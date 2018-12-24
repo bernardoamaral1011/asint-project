@@ -1,0 +1,39 @@
+{
+  "type" : "CAMPUS",
+  "id" : "2448131360897",
+  "name" : "Alameda",
+  "containedSpaces" : [ {
+    "type" : "BUILDING",
+    "id" : "2448131361129",
+    "name" : "Pavilhão de Informática III",
+    "latitude" : "38.73791749999999",
+    "longitude" : "-9.137815400000022",
+    "topLevelSpace" : {
+      "type" : "CAMPUS",
+      "id" : "2448131360897",
+      "name" : "Alameda"
+    }
+  }, {
+    "type" : "BUILDING",
+    "id" : "2448131384238",
+    "name" : "Pavilhão da Associação dos  Estudantes",
+    "latitude" : "38.736323",
+    "longitude" : "-9.137227100000018",
+    "topLevelSpace" : {
+      "type" : "CAMPUS",
+      "id" : "2448131360897",
+      "name" : "Alameda"
+    }
+  }, {
+    "type" : "BUILDING",
+    "id" : "2448131361109",
+    "name" : "Pavilhão de Química",
+    "latitude" : "38.73621309999999",
+    "longitude" : "-9.138437199999998",
+    "topLevelSpace" : {
+      "type" : "CAMPUS",
+      "id" : "2448131360897",
+      "name" : "Alameda"
+    }
+  } ]
+}

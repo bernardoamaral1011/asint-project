@@ -233,9 +233,172 @@ def logout():
         return ''
     return 'Error on logout'
 
+
 def callback(ch, method, properties, body):
     session['messages'].append(body)
     return url_for(sendMessage)
+
+
+@app.route("/API/admin/login", methods=['GET', 'POST'])
+def login_admin():
+    if request.method == 'GET':
+        return make_response('invalid method', 404)
+    if request.method == 'POST':
+        t_id = request.json['id']
+        t_pass = request.json['password']
+        if str(t_id)=="admin" and str(t_pass)=="1234" :
+            return make_response('xpto')    #secret
+        return make_response('invalid credentials', 404)
+
+
+@app.route("/API/admin/listUsersBuilding", methods=['GET', 'POST'])
+def list_usersBuilding():
+    if request.method == 'GET':
+        return make_response('invalid method', 404)
+    if request.method == 'POST':
+        t_secret = request.json['secret']
+        t_building = request.json['building']
+        #check secret
+        if str(t_secret)=='xpto':
+            users = db['users']
+            builds = db['buildings']
+            response = ""
+            check = False
+            #see if we'll list all users or just the ones in some building
+            if t_building is not None:
+                #check if building exists
+                for build in builds.find():
+                    if t_building == build["name"] or t_building == build["id"]:
+                        check = True
+                        this_build = build
+                        break
+                #get users inside building
+                if check:
+                    for user in users.find():
+                        if calc_distance(this_build["latitude"], this_build["longitude"], user["latitude"], user["longitude"], buildDefaultRadius):
+                            s = "id: " + user['id'] + "     name: " + user['name'] + "\n"
+                            response += s
+                    return make_response(response)
+                return make_response('No building found', 404)
+            else:
+                for user in users.find():
+                    s = "id: " + user['id'] + "     name: " + user['name'] + "\n"
+                    response += s
+                return make_response(response)
+        return make_response('failure', 404)
+
+
+@app.route("/API/admin/removeBuilding", methods=['GET', 'POST'])
+def remove_building():
+    if request.method == 'GET':
+        return make_response('invalid method', 404)
+    if request.method == 'POST':
+        t_secret = request.json['secret']
+        t_building = request.json['building']
+        #check secret
+        if str(t_secret)=='xpto':
+            builds = db['buildings']
+            #fing building
+            for build in builds.find():
+                if t_building == build["name"] or t_building == build["id"]:
+                    builds.delete_one({'id': build['id']})
+                    return make_response(build["name"])
+            return make_response('No building found', 404)
+        return make_response('failure', 404)
+
+
+@app.route("/API/admin/listUserLogs", methods=['GET', 'POST'])
+def list_user_logs():
+    #TODO -> Check for Bots messages
+    if request.method == 'GET':
+        return make_response('invalid method', 404)
+    if request.method == 'POST':
+        t_secret = request.json['secret']
+        t_user = request.json['user']
+        response = ""
+        #check secret
+        if str(t_secret)=='xpto':
+            logs = db['logs']
+            for log in logs.find():
+                #check if it is a message or a movement
+                if 'sender' in log.keys():
+                    if t_user == log["sender"] or t_user == log["receiver"]:
+                    #some logs dont have time
+                        if 'time' in log.keys():
+                            s = ("sender: " + log['sender'] + "\n receiver: " + log['receiver']
+                                + "\n message: " + log['message'] + "\n time: " + log['time'].strftime("%Y-%m-%d %H:%M:%S") + "\n \n")
+                        else:
+                            s = ("sender: " + log['sender'] + "\n receiver: " + log['receiver']
+                                + "\n message: " + log['message'] + "\n \n")
+                        response += s
+                else:
+                    if t_user == log["user"]:
+                        if 'time' in log.keys():
+                            s = ("user: " + log['user'] + "\n building: " + log['building']
+                                + "\n movement: " + log['message'] + "\n time: " + log['time'].strftime("%Y-%m-%d %H:%M:%S") + "\n \n")
+                        else:
+                            s = ("user: " + log['user'] + "\n building: " + log['building']
+                                + "\n movement: " + log['message'] + "\n \n")
+                        response += s
+            if response == None:
+                return make_response('That user has no logs yet')
+            return make_response(response)
+        return make_response('failure', 404)
+
+
+@app.route("/API/admin/listBuildingLogs", methods=['GET', 'POST'])
+def list_building_logs():
+    #TODO -> Check for Bots messages
+    if request.method == 'GET':
+        return make_response('invalid method', 404)
+    if request.method == 'POST':
+        t_secret = request.json['secret']
+        t_building = request.json['building']
+        response = ""
+        this_build = ""
+        #check secret
+        if str(t_secret)=='xpto':
+            logs = db['logs']
+            builds = db['buildings']
+            #fing building by name and return as id
+            for build in builds.find():
+                if t_building == build["name"] or t_building == build["id"]:
+                    this_build = build["id"]
+                    break
+            for log in logs.find():
+                #check if it is a message or a movement
+                if 'user' in log.keys():
+                    if this_build == log["building"]:
+                        if 'time' in log.keys():
+                            s = ("user: " + log['user'] + "\n building: " + log['building']
+                                + "\n movement: " + log['message'] + "\n time: " + log['time'].strftime("%Y-%m-%d %H:%M:%S") + "\n \n")
+                        else:
+                            s = ("user: " + log['user'] + "\n building: " + log['building']
+                                + "\n movement: " + log['message'] + "\n \n")
+                        response += s
+            if response == None:
+                return make_response('That building has no logs yet')
+            return make_response(response)
+        return make_response('failure', 404)
+
+
+@app.route("/API/admin/addBuilding", methods=['GET', 'POST'])
+def add_building():
+    if request.method == 'GET':
+        return make_response('invalid method', 404)
+    if request.method == 'POST':
+        t_secret = request.json['secret']
+        #check secret
+        if str(t_secret)=='xpto':
+            builds = db['buildings']
+            building = {'id': request.json['id'], 'name': request.json['name'],
+                 'latitude': request.json['latitude'], 'longitude': request.json['longitude']}
+            #check if building is already in DB
+            if not builds.find_one({'id': building['id']}):
+                builds.insert_one(building)
+            return make_response(building['name'])
+        return make_response('failure', 404)
+
 
 if __name__ == '__main__':
     app.run(debug = 'TRUE')
