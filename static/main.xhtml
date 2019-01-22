@@ -121,7 +121,7 @@
     <!-- Users Nearby -->
     <hr/>
     <div class="w3-center">
-        <h4>Input a radius for nearby user's search (km's)</h4>
+        <h4>Define a radius for nearby user's (km's) - you can then message those users</h4>
         <input type="text" name="" size="20" id="searchText" />
         <input type="submit" value="Search for nearby users"  id="nearbyButton"/>
     </div>
@@ -198,8 +198,7 @@
     <!-- Send message to selected user -->
     <hr/>
     <div class="w3-center">
-        <h4>Send a message to a nearby user:</h4>
-        Id: <input type="text" id="destIdS" name="usrname"/>
+        <h4>Send a message to all nearby users:</h4>
         <p>Message:</p> <textarea rows="4" cols="50" id="messageS" form="usrform"></textarea> 
         <br/>
         <input type="submit" id="sendMBtn" value="Send mensage"/>
@@ -213,7 +212,7 @@
                     url: '/API/users/sendMessage',
                     dataType: "json",
                     contentType: "application/json",
-                    data: '{"dest":"' + $("#destIdS").val() + '","message":"'+ $("#messageS").val()+'"}',
+                    data: '{"message":"'+ $("#messageS").val()+'"}',
                     success: function(data) {
                         console.log(data);
                         s='No nearby users!';

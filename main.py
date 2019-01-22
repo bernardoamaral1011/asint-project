@@ -62,6 +62,8 @@ def login():
         session['userId'] = username
         session['userSecret'] = access_token
         session['curBuildId'] = None
+        # Radius for nearby user messaging
+        session['radius'] = 0.2
         resp = make_response(redirect("static/main.xhtml"))
         resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         resp.headers['Pragma'] = 'no-cache'
@@ -168,13 +170,13 @@ def seeNearby():
     if (request.cookies.get('userSecret') == session['userSecret']):
         if(request.is_json):
             # Get the coordinates
-            radius = request.json["radius"]
+            session['radius'] = request.json["radius"]
             users = db['users']
             cur_user = users.find_one({"id": session['userId']})
             response = []
             for user in users.find():
                 if(cur_user['id'] != user['id'] ):
-                    if calc_distance(cur_user["latitude"], cur_user["longitude"], user["latitude"], user["longitude"], radius):
+                    if calc_distance(cur_user["latitude"], cur_user["longitude"], user["latitude"], user["longitude"], session['radius']):
                         response.append(user['id'])
             return jsonify(response)
     return '<h1>Error 404: Internal Server Error</h1>'
@@ -208,42 +210,26 @@ def sendMessage():
     if (request.cookies.get('userSecret') == session['userSecret']):
         if(request.is_json):
             users = db['users']
-            if (users.find_one({"id": request.json['dest']})):
-                message = request.json['message']
-                if message == '':
+            # Send the message to all users in the radius
+            message = request.json['message']
+            if message == '':
                     return jsonify({'data': 'Blank messages not supported'})
-                receiver = users.find_one({"id": request.json['dest']})
-                sender = users.find_one({"id": session['userId']})
-                # Check if receiver is in same building
-                if (session['curBuildId'] is not None):
-                    buildings = db['buildings']
-                    building = buildings.find_one({"id": session['curBuildId']})
-                    if calc_distance(building['latitude'], building['longitude'], receiver['latitude'], receiver['longitude'], buildDefaultRadius):
-                        # Send through pika - rabbitmq; TODO: test for bugs
+            sender = users.find_one({"id": session['userId']})
+
+            # Find all users that are within the radius
+            for user in users.find():
+                if(sender['id'] != user['id'] ):
+                    if calc_distance(sender["latitude"], sender["longitude"], user["latitude"], user["longitude"], session['radius']):
+                       # Send through pika - rabbitmq; 
                         connection = pika.BlockingConnection(pika.URLParameters('amqp://ipfhgnix:bdVKXFFYnkNsnWggTdGxBnKT8sd_eMHb@porpoise.rmq.cloudamqp.com/ipfhgnix')) # '35.190.171.18'
                         channel = connection.channel()
-                        channel.queue_declare(queue=receiver['id'])
-                        channel.basic_publish(exchange='',routing_key=receiver['id'],body= sender['id']+": "+message)
+                        channel.queue_declare(queue=user['id'])
+                        channel.basic_publish(exchange='',routing_key=user['id'],body= sender['id']+": "+message)
                         connection.close()
                         # Insert message in logs
                         logs = db['logs']
-                        logs.insert_one({'sender': session['userId'], 'receiver': receiver['id'], 'message': message, 'time': datetime.datetime.now()})
-                        return jsonify({'data': 'Message sent'})
-                # Check if receiver is nearby
-                if calc_distance(sender['latitude'], sender['longitude'], receiver['latitude'], receiver['longitude'], buildDefaultRadius) :
-                    # Send through pika - rabbitmq; TODO: test for bugs
-                    connection = pika.BlockingConnection(pika.URLParameters('amqp://ipfhgnix:bdVKXFFYnkNsnWggTdGxBnKT8sd_eMHb@porpoise.rmq.cloudamqp.com/ipfhgnix')) # '35.190.171.18'
-                    channel = connection.channel()
-                    channel.queue_declare(queue=receiver['id'])
-                    channel.basic_publish(exchange='',routing_key=receiver['id'],body= sender['id']+": "+message)
-                    connection.close()
-                    # Insert message in logs
-                    logs = db['logs']
-                    logs.insert_one({'sender': session['userId'], 'receiver': receiver['id'], 'message': message, 'time': datetime.datetime.now()})
-                    return jsonify({'data': 'Message sent'})
-                return jsonify({'data': 'User not in range'})
-            else:
-                return jsonify({'data': 'User not in database'})
+                        logs.insert_one({'sender': session['userId'], 'receiver': user['id'], 'message': message, 'time': datetime.datetime.now()})    
+            return jsonify({'data': 'Message sent'})
     return jsonify({'data': 'Wrong message format'})
 
 

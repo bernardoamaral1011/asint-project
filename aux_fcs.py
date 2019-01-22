@@ -17,7 +17,11 @@ def calc_distance(lat1_, lon1_, lat2_, lon2_, radius):
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
     distance = R * c
-
+    try:
+        float(radius)
+    except ValueError:
+        return False
+        
     if distance <= float(radius):
         return True
     return False
