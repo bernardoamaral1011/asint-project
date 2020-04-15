@@ -1,5 +1,5 @@
 # asint-project
-ASint Subject Project
+Internet Based Systems Architecture subject project
 
 1º- fazer as bd's para os três tipos de dados, em python
 
